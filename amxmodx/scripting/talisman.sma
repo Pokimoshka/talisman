@@ -1,7 +1,16 @@
 #include <amxmodx>
+#include <fun>
 #include <reapi>
+#include <tl_api>
 
 #define TASK_ID 67628
+
+enum _:FwdTalisman {
+	RISE_TALISMAN_PRE,
+	RISE_TALISMAN_POST,
+	DROPPED_TALISMAN_PRE,
+	DROPPED_TALISMAN_POST
+};
 
 enum CVARS
 {
@@ -23,7 +32,8 @@ enum CVARS
 	Float:MAX_REREGENERATION_HEALTH
 };
 
-new g_eCvars[CVARS];
+new g_eFwdTalisman[FwdTalisman], g_eCvars[CVARS];
+new FwdReturn;
 
 new const g_szModel[] = "models/talisman.mdl";
 
@@ -36,11 +46,19 @@ public plugin_init()
 
 	register_dictionary("talisman.txt");
 	
-	RegisterHookChain(RG_CSGameRules_RestartRound, "HC_CSGameRules_RestartRound_Pre", .post = false);
-	RegisterHookChain(RG_CBasePlayer_Killed, "HC_CBasePlayer_Killed_Post", .post = true);
-	RegisterHookChain(RG_CSGameRules_CleanUpMap, "HC_CSGameRules_CleanUpMap_Post", true);
+	RegisterHookChain(RG_CSGameRules_RestartRound, "@HC_CSGameRules_RestartRound_Pre", .post = false);
+	RegisterHookChain(RG_CBasePlayer_Killed, "@HC_CBasePlayer_Killed_Post", .post = true);
+	RegisterHookChain(RG_CSGameRules_CleanUpMap, "@HC_CSGameRules_CleanUpMap_Post", true);
 
-	RegisterCvars();
+	@RegisterFwdTalisman();
+	@RegisterCvars();
+}
+
+@RegisterFwdTalisman(){
+    g_eFwdTalisman[RISE_TALISMAN_PRE] = CreateMultiForward("rise_talisman_pre", ET_STOP, FP_CELL);
+    g_eFwdTalisman[RISE_TALISMAN_POST] = CreateMultiForward("rise_talisman_post", ET_IGNORE, FP_CELL);
+    g_eFwdTalisman[DROPPED_TALISMAN_PRE] = CreateMultiForward("drop_talisman_pre", ET_STOP);
+    g_eFwdTalisman[DROPPED_TALISMAN_POST] = CreateMultiForward("drop_talisman_post", ET_IGNORE, FP_CELL);
 }
 
 public plugin_precache()
@@ -51,21 +69,21 @@ public plugin_precache()
 public client_disconnected(id)
 {
 	if(g_iPlayerId == id){
-		TalismanSpawn(id);
+		@TalismanSpawn(id);
 	}
 }
 
-public HC_CSGameRules_CleanUpMap_Post() {
+@HC_CSGameRules_CleanUpMap_Post() {
 	new iEnt = NULLENT;
 	
 	while((iEnt = rg_find_ent_by_class(iEnt, "talisman"))){
 		if(!is_nullent(iEnt)){
-      			set_entvar(iEnt, var_flags, FL_KILLME);
-    		}
+      		set_entvar(iEnt, var_flags, FL_KILLME);
+    	}
 	}
 }
 
-public HC_CSGameRules_RestartRound_Pre()
+@HC_CSGameRules_RestartRound_Pre()
 {
 	if(get_member_game(m_bCompleteReset)){
 		g_iRoundCounter = 0;
@@ -88,35 +106,41 @@ public HC_CSGameRules_RestartRound_Pre()
 	if(g_eCvars[GLOW]){
 		switch(get_member(g_iPlayerId, m_iTeam)){
 			case TEAM_CT:{
-				rg_set_user_rendering(g_iPlayerId, kRenderFxGlowShell, {g_eCvars[GLOW_CT_COLOR_R], g_eCvars[GLOW_CT_COLOR_G], g_eCvars[GLOW_CT_COLOR_B]}, kRenderNormal, 25.0);
-			}
-			case TEAM_TERRORIST:{
-				rg_set_user_rendering(g_iPlayerId, kRenderFxGlowShell, {g_eCvars[GLOW_TT_COLOR_R], g_eCvars[GLOW_TT_COLOR_G], g_eCvars[GLOW_TT_COLOR_B]}, kRenderNormal, 25.0);
-			}
+                set_user_rendering(g_iPlayerId, kRenderFxGlowShell, g_eCvars[GLOW_CT_COLOR_R], g_eCvars[GLOW_CT_COLOR_G], g_eCvars[GLOW_CT_COLOR_B], kRenderNormal, 25)
+            }
+            case TEAM_TERRORIST:{
+                set_user_rendering(g_iPlayerId, kRenderFxGlowShell, g_eCvars[GLOW_TT_COLOR_R], g_eCvars[GLOW_TT_COLOR_G], g_eCvars[GLOW_TT_COLOR_B], kRenderNormal, 25)
+            }
 		}
 	}
 
 	set_task(g_eCvars[INTERVAL_REGENERATION], "RegenerationHealth", g_iPlayerId+TASK_ID, .flags="b");
 }
 
-public HC_CBasePlayer_Killed_Post(const this, pevAttacker, iGib)
+@HC_CBasePlayer_Killed_Post(const this, pevAttacker, iGib)
 {
 	if(this == g_iPlayerId)
-		TalismanSpawn(g_iPlayerId);
+		@TalismanSpawn(g_iPlayerId);
 }
 
-public Talisman_Touch(iEnt, id)
+@Talisman_Touch(iEnt, iPlayer)
 {
-	if(!is_entity(iEnt) || !is_user_connected(id))
+	if(!is_entity(iEnt) || !is_user_connected(iPlayer))
 		return;
 
-	SetTouch(iEnt, "");
-	set_entvar(iEnt, var_flags, get_entvar(iEnt, var_flags) | FL_KILLME);
-	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_RAISED", g_iPlayerId = id);
-	set_task(g_eCvars[INTERVAL_REGENERATION], "RegenerationHealth", g_iPlayerId+TASK_ID, .flags="b");
+	ExecuteForward(g_eFwdTalisman[RISE_TALISMAN_PRE], FwdReturn, iPlayer);
+
+	if(FwdReturn != TL_HANDLE){
+		SetTouch(iEnt, "");
+		set_entvar(iEnt, var_flags, get_entvar(iEnt, var_flags) | FL_KILLME);
+		client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_RAISED", g_iPlayerId = iPlayer);
+		set_task(g_eCvars[INTERVAL_REGENERATION], "RegenerationHealth", g_iPlayerId+TASK_ID, .flags="b");
+
+		ExecuteForward(g_eFwdTalisman[RISE_TALISMAN_POST], FwdReturn, iPlayer);
+	}
 }
 
-public RegenerationHealth()
+@RegenerationHealth()
 {
 	if(!g_iPlayerId || get_playersnum() < g_eCvars[MIN_PLAYERS])
 		return;
@@ -146,7 +170,7 @@ public RegenerationHealth()
 	}
 }
 
-public RegisterCvars(){
+@RegisterCvars(){
 	bind_pcvar_num(create_cvar(
 		"talisman_screenfede",
 		"1",
@@ -255,45 +279,43 @@ public RegisterCvars(){
 	AutoExecConfig(true, "talisman");
 }
 
-stock TalismanSpawn(id)
+@TalismanSpawn(id)
 {
-	new Float:fOrigin[3], Float: fAngles[3];
-	get_entvar(id, var_origin, fOrigin);
-	
-	new iEnt = rg_create_entity("info_target", false);
-	
-	if(!is_entity(iEnt))
-		return;
+	ExecuteForward(g_eFwdTalisman[DROPPED_TALISMAN_PRE], FwdReturn);
 
-	if(g_eCvars[GLOW]){
-		set_user_rendering(id)
+	if(FwdReturn != TL_HANDLE){
+		new Float:fOrigin[3], Float: fAngles[3];
+		get_entvar(id, var_origin, fOrigin);
+		
+		new iEnt = rg_create_entity("info_target", false);
+		
+		if(!is_entity(iEnt))
+			return;
+
+		if(g_eCvars[GLOW]){
+			set_user_rendering(id)
+		}
+
+		fAngles[1] = random_float(-180.0, 180.0);
+
+		set_entvar(iEnt, var_origin, fOrigin);
+		set_entvar(iEnt, var_classname, "talisman");
+		set_entvar(iEnt, var_model, g_szModel);
+		set_entvar(iEnt, var_modelindex, g_ModelInDexTalisman);
+		set_entvar(iEnt, var_skin, random_num(0, 5));
+		set_entvar(iEnt, var_solid, SOLID_TRIGGER);
+		set_entvar(iEnt, var_movetype, MOVETYPE_TOSS);
+		set_entvar(iEnt, var_sequence, 0);
+		set_entvar(iEnt, var_framerate, 0.5);
+		set_entvar(iEnt, var_effects, 8);
+		set_entvar(iEnt, var_mins, Float:{-16.0,-16.0,-16.0})
+		set_entvar(iEnt, var_maxs, Float:{16.0,16.0,16.0})
+		set_entvar(iEnt, var_angles, fAngles);
+		client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_LOST", g_iPlayerId);
+		g_iPlayerId = 0
+		remove_task(id+TASK_ID);
+		SetTouch(iEnt, "Talisman_Touch");
+
+		ExecuteForward(g_eFwdTalisman[DROPPED_TALISMAN_POST], FwdReturn, iEnt);
 	}
-
-	fAngles[1] = random_float(-180.0, 180.0);
-
-	set_entvar(iEnt, var_origin, fOrigin);
-	set_entvar(iEnt, var_classname, "talisman");
-	set_entvar(iEnt, var_model, g_szModel);
-	set_entvar(iEnt, var_modelindex, g_ModelInDexTalisman);
-	set_entvar(iEnt, var_skin, random_num(0, 5));
-	set_entvar(iEnt, var_solid, SOLID_TRIGGER);
-	set_entvar(iEnt, var_movetype, MOVETYPE_TOSS);
-	set_entvar(iEnt, var_sequence, 0);
-	set_entvar(iEnt, var_framerate, 0.5);
-	set_entvar(iEnt, var_effects, 8);
-	set_entvar(iEnt, var_mins, Float:{-16.0,-16.0,-16.0})
-	set_entvar(iEnt, var_maxs, Float:{16.0,16.0,16.0})
-	set_entvar(iEnt, var_angles, fAngles);
-	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_LOST", g_iPlayerId);
-	g_iPlayerId = 0
-	remove_task(id+TASK_ID);
-	SetTouch(iEnt, "Talisman_Touch");
 }
-
-stock rg_set_user_rendering(index, fx = kRenderFxNone, {Float,_}:color[3] = {0.0,0.0,0.0}, render = kRenderNormal, Float:amount = 0.0)
-{
-    set_entvar(index, var_renderfx, fx);
-    set_entvar(index, var_rendercolor, color);
-    set_entvar(index, var_rendermode, render);
-    set_entvar(index, var_renderamt, amount);
-} 
