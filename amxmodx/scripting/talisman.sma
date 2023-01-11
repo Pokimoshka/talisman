@@ -42,7 +42,7 @@ new g_ModelInDexTalisman;
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman", "1.2.5", "BiZaJe");
+	register_plugin("[RE] Talisman", "1.3", "BiZaJe");
 
 	register_dictionary("talisman.txt");
 	
