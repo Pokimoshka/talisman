@@ -49,6 +49,23 @@ talisman_reg_interval "3.0"<br>
 // Maximum amount of health during regeneration<br>
 talisman_max_reg_hp "100.0"<br>
 <br>
+<h2> API плагина</h2>
+<hr>
+// The function is called before the talisman is raised<br>
+// @param iPlayer  Player index<br>
+forward rise_talisman_pre(iPlayer);<br>
+<br>
+// The function is called after lifting the talisman<br>
+// @param iPlayer  Player index<br>
+forward rise_talisman_post(iPlayer);<br>
+<br>
+// The function is called before the talisman is lost<br>
+forward drop_talisman_pre();<br>
+<br>
+// The function is called after the loss of the talisman<br>
+// @param iEnt     Entity index<br>
+forward drop_talisman_post(iEnt);
+<hr>
 <h2>Благодарность</h2>
 <hr>
 <ul>
