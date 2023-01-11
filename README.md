@@ -1,3 +1,5 @@
+<h1>[RE] Talisman</h1>
+<hr>
 Переписанный плагин <a href="https://c-s.net.ua/forum/topic74308.html">Crux Ansata</a> под ReAPI со своим API
 <hr>
 <h2>Настройки</h2>
