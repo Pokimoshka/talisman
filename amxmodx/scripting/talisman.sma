@@ -60,8 +60,8 @@ public HC_CSGameRules_CleanUpMap_Post() {
 	
 	while((iEnt = rg_find_ent_by_class(iEnt, "talisman"))){
 		if(!is_nullent(iEnt)){
-      		set_entvar(iEnt, var_flags, FL_KILLME);
-    	}
+      			set_entvar(iEnt, var_flags, FL_KILLME);
+    		}
 	}
 }
 
