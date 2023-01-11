@@ -1,0 +1,11 @@
+[ru]
+TALISMAN_PREFIX = ^4[Талисман]
+TALISMAN_DROPPED_OUT = ^3%n ^1выпал талисман жизни.
+TALISMAN_RAISED = ^3%n ^1поднял талисман жизни.
+TALISMAN_LOST = ^3%n ^1потерял талисман жизни.
+
+[en]
+TALISMAN_PREFIX = ^4[Talisman]
+TALISMAN_DROPPED_OUT = ^3%n ^1the talisman of life has fallen out.
+TALISMAN_RAISED = ^3%n ^1raised the talisman of life.
+TALISMAN_LOST = ^3%n ^1lost the talisman of life.
