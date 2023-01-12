@@ -1,5 +1,12 @@
-#define TL_HANDLE 0     // Block
-#define TL_IGNORE 1     // Ignore
+#include <amxmodx>
+#include <fun>
+#include <reapi>
+
+/**
+    The function is called when the player has received a talisman
+*/
+forward give_talisman();
+
 
 /**
     The function is called before the talisman is raised
@@ -20,6 +27,8 @@ forward drop_talisman_pre();
 
 /**
 	The function is called after the loss of the talisman
-	@param iEnt     Entity index
 */
-forward drop_talisman_post(iEnt);
+forward drop_talisman_post(iPlayer);
+
+// The function is called when the player has received a talisman
+native player_is_talisman();
