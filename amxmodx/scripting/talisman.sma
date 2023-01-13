@@ -1,7 +1,5 @@
 #include <tl_api>
 
-#define TASK_ID 67628
-
 enum _:FwdTalisman {
 	GIVE_TALISMAN,
 	RISE_TALISMAN_PRE,
@@ -21,7 +19,7 @@ new FwdReturn;
 
 new const g_szModel[] = "models/talisman.mdl";
 
-new g_iPlayerId, g_iRoundCounter;
+new g_iPlayerId, g_MaxPlayers, g_iRoundCounter;
 new g_ModelInDexTalisman;
 
 public plugin_init()
@@ -33,16 +31,18 @@ public plugin_init()
 	RegisterHookChain(RG_CSGameRules_RestartRound, "@HC_CSGameRules_RestartRound_Pre", .post = false);
 	RegisterHookChain(RG_CBasePlayer_Killed, "@HC_CBasePlayer_Killed_Post", .post = true);
 
+	g_MaxPlayers = get_maxplayers()
+
 	@RegisterFwdTalisman();
 	@RegisterCvars();
 }
 
 @RegisterFwdTalisman(){
 	g_eFwdTalisman[GIVE_TALISMAN] = CreateMultiForward("give_talisman", ET_IGNORE);
-	g_eFwdTalisman[RISE_TALISMAN_PRE] = CreateMultiForward("rise_talisman_pre", ET_STOP, FP_CELL);
-	g_eFwdTalisman[RISE_TALISMAN_POST] = CreateMultiForward("rise_talisman_post", ET_IGNORE, FP_CELL);
-    	g_eFwdTalisman[DROPPED_TALISMAN_PRE] = CreateMultiForward("drop_talisman_pre", ET_STOP);
-    	g_eFwdTalisman[DROPPED_TALISMAN_POST] = CreateMultiForward("drop_talisman_post", ET_IGNORE, FP_CELL);
+    g_eFwdTalisman[RISE_TALISMAN_PRE] = CreateMultiForward("rise_talisman_pre", ET_STOP, FP_CELL);
+    g_eFwdTalisman[RISE_TALISMAN_POST] = CreateMultiForward("rise_talisman_post", ET_IGNORE, FP_CELL);
+    g_eFwdTalisman[DROPPED_TALISMAN_PRE] = CreateMultiForward("drop_talisman_pre", ET_STOP);
+    g_eFwdTalisman[DROPPED_TALISMAN_POST] = CreateMultiForward("drop_talisman_post", ET_IGNORE, FP_CELL);
 }
 
 public plugin_natives()
@@ -81,10 +81,11 @@ public client_disconnected(iPlayer)
     	}
 	}
 
-	new apPlayers[32], iPlayers;
-	get_players(apPlayers, iPlayers, "h");
+	g_iPlayerId = RandomAlive(random_num(1, AliveCount()));
 
-	g_iPlayerId = apPlayers[random_num(1, iPlayers)];
+	if(g_iPlayerId <= 0){
+		return;
+	}
 
 	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_DROPPED_OUT", g_iPlayerId);
 
@@ -129,7 +130,7 @@ public client_disconnected(iPlayer)
 		g_eCvars[MIN_PLAYERS]
 	);
 	
-	AutoExecConfig(true, "talisman");
+	AutoExecConfig(true, "talisman_core");
 }
 
 public native_core_player_is_talisman()
@@ -171,4 +172,34 @@ public native_core_player_is_talisman()
 	ExecuteForward(g_eFwdTalisman[DROPPED_TALISMAN_POST], FwdReturn, iPlayer);
 	g_iPlayerId = 0
 	SetTouch(iEnt, "@Talisman_Touch");
+}
+
+/* The code is taken from ZP 5.0 */
+stock AliveCount()
+{
+	new iAlive, iPlayer;
+	
+	for (iPlayer = 1; iPlayer <= g_MaxPlayers; iPlayer++)
+	{
+		if (is_user_alive(iPlayer))
+			iAlive++;
+	}
+	
+	return iAlive;
+}
+
+stock RandomAlive(target_index)
+{
+	new iAlive, iPlayer;
+	
+	for (iPlayer = 1; iPlayer <= g_MaxPlayers; iPlayer++)
+	{
+		if (is_user_alive(iPlayer))
+			iAlive++;
+		
+		if (iAlive == target_index)
+			return iPlayer;
+	}
+	
+	return -1;
 }
