@@ -29,8 +29,11 @@ forward drop_talisman_pre();
 */
 forward drop_talisman_post(iPlayer);
 
-// The function is called when the player has received a talisman
+// Checks who has the talisman
 native player_is_talisman();
+
+// Checks for the presence of a talisman in the player
+native is_talisman();
 
 stock rg_set_rendering(eEnt, fx = kRenderFxNone, r = 255, g = 255, b = 255, render = kRenderNormal, amount = 16)
 {
