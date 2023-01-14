@@ -1,0 +1,9 @@
+[ru]
+TALISMAN_GIVE_HUD = Вы получили талисман. Это ваш шанс.
+TALISMAN_RISE_HUD = Вы подняли талисман. Не успускайте свою возможность.
+TALISMAN_DROP_HUD = Вы потеряли талисман. Удача не на вашей стороне.
+
+[en]
+TALISMAN_GIVE_HUD = You have received a talisman. This is your chance.
+TALISMAN_RISE_HUD = You raised the talisman. Don't miss your opportunity.
+TALISMAN_DROP_HUD = You've lost the talisman. Luck is not on your side.
