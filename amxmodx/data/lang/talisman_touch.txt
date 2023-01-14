@@ -1,0 +1,7 @@
+[ru]
+TALISMAN_PREFIX = ^4[TALISMAN]
+TALISMAN_RISE_TOUCH_BLOCK = ^1Слишком низкое звание для использования талисмана.
+
+[en]
+TALISMAN_PREFIX = ^4[TALISMAN]
+TALISMAN_RISE_TOUCH_BLOCK = ^1The rank is too low to use a talisman.
