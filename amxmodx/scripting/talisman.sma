@@ -21,10 +21,11 @@ new const g_szModel[] = "models/talisman.mdl";
 
 new g_iPlayerId, g_MaxPlayers, g_iRoundCounter;
 new g_ModelInDexTalisman;
+new bool:g_bTalisman = false;
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman", "1.3.2", "BiZaJe");
+	register_plugin("[RE] Talisman", "1.3.3", "BiZaJe");
 
 	register_dictionary("talisman.txt");
 	
@@ -39,15 +40,16 @@ public plugin_init()
 
 @RegisterFwdTalisman(){
 	g_eFwdTalisman[GIVE_TALISMAN] = CreateMultiForward("give_talisman", ET_IGNORE);
-    g_eFwdTalisman[RISE_TALISMAN_PRE] = CreateMultiForward("rise_talisman_pre", ET_STOP, FP_CELL);
-    g_eFwdTalisman[RISE_TALISMAN_POST] = CreateMultiForward("rise_talisman_post", ET_IGNORE, FP_CELL);
-    g_eFwdTalisman[DROPPED_TALISMAN_PRE] = CreateMultiForward("drop_talisman_pre", ET_STOP);
-    g_eFwdTalisman[DROPPED_TALISMAN_POST] = CreateMultiForward("drop_talisman_post", ET_IGNORE, FP_CELL);
+	g_eFwdTalisman[RISE_TALISMAN_PRE] = CreateMultiForward("rise_talisman_pre", ET_STOP, FP_CELL);
+	g_eFwdTalisman[RISE_TALISMAN_POST] = CreateMultiForward("rise_talisman_post", ET_IGNORE, FP_CELL);
+	g_eFwdTalisman[DROPPED_TALISMAN_PRE] = CreateMultiForward("drop_talisman_pre", ET_STOP);
+	g_eFwdTalisman[DROPPED_TALISMAN_POST] = CreateMultiForward("drop_talisman_post", ET_IGNORE, FP_CELL);
 }
 
 public plugin_natives()
 {
 	register_native("player_is_talisman", "native_core_player_is_talisman");
+	register_native("is_talisman", "native_core_is_talisman");
 }
 
 public plugin_precache()
@@ -73,6 +75,8 @@ public client_disconnected(iPlayer)
 		return;
 	}
 
+	g_bTalisman = false;
+
 	new iEnt = NULLENT;
 	
 	while((iEnt = rg_find_ent_by_class(iEnt, "talisman"))){
@@ -88,6 +92,8 @@ public client_disconnected(iPlayer)
 	}
 
 	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_DROPPED_OUT", g_iPlayerId);
+
+	g_bTalisman = true;
 
 	ExecuteForward(g_eFwdTalisman[GIVE_TALISMAN], FwdReturn);
 }
@@ -111,6 +117,7 @@ public client_disconnected(iPlayer)
 	SetTouch(iEnt, "");
 	set_entvar(iEnt, var_flags, get_entvar(iEnt, var_flags) | FL_KILLME);
 	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_RAISED", g_iPlayerId = iPlayer);
+	g_bTalisman = true;
 	ExecuteForward(g_eFwdTalisman[RISE_TALISMAN_POST], FwdReturn, iPlayer);
 }
 
@@ -136,6 +143,11 @@ public client_disconnected(iPlayer)
 public native_core_player_is_talisman()
 {
 	return g_iPlayerId;
+}
+
+public native_core_is_talisman()
+{
+	return g_bTalisman;
 }
 
 @TalismanSpawn(iPlayer)
@@ -171,6 +183,7 @@ public native_core_player_is_talisman()
 	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_LOST", g_iPlayerId);
 	ExecuteForward(g_eFwdTalisman[DROPPED_TALISMAN_POST], FwdReturn, iPlayer);
 	g_iPlayerId = 0
+	g_bTalisman = false;
 	SetTouch(iEnt, "@Talisman_Touch");
 }
 
