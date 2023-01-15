@@ -1,4 +1,16 @@
 #include <tl_api>
+#include <ini_file>
+
+new const FileName[] = "talisman";
+new const Section[] = "Models";
+
+#define MODELS_MAX_LENGTH 32
+
+new const ModelList[][] = {
+	"models/talisman.mdl"
+}
+
+new Array:g_ModelArray;
 
 enum _:FwdTalisman {
 	GIVE_TALISMAN,
@@ -17,15 +29,13 @@ enum CVARS
 new g_eFwdTalisman[FwdTalisman], g_eCvars[CVARS];
 new FwdReturn;
 
-new const g_szModel[] = "models/talisman.mdl";
-
 new g_iPlayerId, g_MaxPlayers, g_iRoundCounter;
-new g_ModelInDexTalisman;
+new g_ModelIndex[32];
 new bool:g_bTalisman = false;
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman", "1.3.3", "BiZaJe");
+	register_plugin("[RE] Talisman", "1.4", "BiZaJe");
 
 	register_dictionary("talisman.txt");
 	
@@ -54,7 +64,23 @@ public plugin_natives()
 
 public plugin_precache()
 {
-	g_ModelInDexTalisman = precache_model(g_szModel);
+    g_ModelArray = ArrayCreate(MODELS_MAX_LENGTH, 1);
+    ini_read_string_array(FileName, Section, "ModelList", g_ModelArray);
+
+    new model[MODELS_MAX_LENGTH], i;
+
+    if (ArraySize(g_ModelArray) == 0)
+    {
+        for (i = 0; i < sizeof(ModelList); i++)
+            ArrayPushString(g_ModelArray, ModelList[i]);
+
+        ini_write_string_array(FileName, Section, "ModelList", g_ModelArray);
+    }
+
+    for(i = 0; i < ArraySize(g_ModelArray); i++){
+        ArrayGetString(g_ModelArray, i, model, charsmax(model));
+        g_ModelIndex[i] =  precache_model(model);
+	}
 }
 
 public client_disconnected(iPlayer)
@@ -159,6 +185,8 @@ public native_core_is_talisman()
 
 	new Float:fOrigin[3], Float: fAngles[3];
 	get_entvar(iPlayer, var_origin, fOrigin);
+	new model[MODELS_MAX_LENGTH], iRndNum = random_num(0, ArraySize(g_ModelArray) - 1)
+	ArrayGetString(g_ModelArray, iRndNum, model, charsmax(model));
 		
 	new iEnt = rg_create_entity("info_target", false);
 		
@@ -169,8 +197,8 @@ public native_core_is_talisman()
 
 	set_entvar(iEnt, var_origin, fOrigin);
 	set_entvar(iEnt, var_classname, "talisman");
-	set_entvar(iEnt, var_model, g_szModel);
-	set_entvar(iEnt, var_modelindex, g_ModelInDexTalisman);
+	set_entvar(iEnt, var_model, model);
+	set_entvar(iEnt, var_modelindex, g_ModelIndex[iRndNum]);
 	set_entvar(iEnt, var_skin, random_num(0, 5));
 	set_entvar(iEnt, var_solid, SOLID_TRIGGER);
 	set_entvar(iEnt, var_movetype, MOVETYPE_TOSS);
@@ -187,6 +215,10 @@ public native_core_is_talisman()
 	SetTouch(iEnt, "@Talisman_Touch");
 }
 
+public plugin_end(){
+    ArrayDestroy(g_ModelArray);
+}
+
 /* The code is taken from ZP 5.0 */
 stock AliveCount()
 {
@@ -194,7 +226,7 @@ stock AliveCount()
 	
 	for (iPlayer = 1; iPlayer <= g_MaxPlayers; iPlayer++)
 	{
-		if (is_user_alive(iPlayer))
+		if (is_user_alive(iPlayer) && ((get_member(iPlayer, m_iTeam) != TEAM_SPECTATOR) || (get_member(iPlayer, m_iTeam) != TEAM_UNASSIGNED)))
 			iAlive++;
 	}
 	
@@ -207,7 +239,7 @@ stock RandomAlive(target_index)
 	
 	for (iPlayer = 1; iPlayer <= g_MaxPlayers; iPlayer++)
 	{
-		if (is_user_alive(iPlayer))
+		if (is_user_alive(iPlayer) && ((get_member(iPlayer, m_iTeam) != TEAM_SPECTATOR) || (get_member(iPlayer, m_iTeam) != TEAM_UNASSIGNED)))
 			iAlive++;
 		
 		if (iAlive == target_index)
