@@ -17,7 +17,7 @@ new g_eCvars[CVARS];
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman Health", "1.0", "BiZaJe");
+	register_plugin("[RE] Talisman Health", "1.0.1", "BiZaJe");
 
 	@RegisterCvars();
 }
@@ -27,12 +27,12 @@ public give_talisman(){
 }
 
 public rise_talisman_post(iPlayer){
-    set_task(g_eCvars[INTERVAL_REGENERATION], "@RegenerationHealth", iPlayer+TASK_ID, .flags="b");
+	set_task(g_eCvars[INTERVAL_REGENERATION], "@RegenerationHealth", iPlayer+TASK_ID, .flags="b");
 	return PLUGIN_CONTINUE;
 }
 
 public drop_talisman_post(iPlayer){
-    remove_task(iPlayer+TASK_ID);
+	remove_task(iPlayer+TASK_ID);
 	return PLUGIN_CONTINUE;
 }
 
@@ -53,15 +53,17 @@ public drop_talisman_post(iPlayer){
 		set_entvar(player_is_talisman(), var_health, fHealth + giveHealth);
 		
 		if(g_eCvars[SCREENFADE]){
-			message_begin(MSG_ONE_UNRELIABLE, 98, _, player_is_talisman());
-			write_short(1<<10);
-			write_short(1<<10);
-			write_short(0x0000);
-			write_byte(g_eCvars[SCREENFADE_COLOR_R]);
-			write_byte(g_eCvars[SCREENFADE_COLOR_G]);
-			write_byte(g_eCvars[SCREENFADE_COLOR_B]);
-			write_byte(40);
-			message_end();
+			if(!is_player_blinded(player_is_talisman())){
+				message_begin(MSG_ONE_UNRELIABLE, 98, _, player_is_talisman());
+				write_short(1<<10);
+				write_short(1<<10);
+				write_short(0x0000);
+				write_byte(g_eCvars[SCREENFADE_COLOR_R]);
+				write_byte(g_eCvars[SCREENFADE_COLOR_G]);
+				write_byte(g_eCvars[SCREENFADE_COLOR_B]);
+				write_byte(40);
+				message_end();
+			}
 		}
 	}
 }
@@ -117,4 +119,9 @@ public drop_talisman_post(iPlayer){
 		g_eCvars[MAX_REREGENERATION_HEALTH]
 	);
 	AutoExecConfig(true, "talisman_health");
+}
+
+stock bool:is_player_blinded(iPlayer)
+{
+    return bool:(get_gametime() >= Float:get_member(iPlayer, m_blindStartTime) + Float:get_member(iPlayer, m_blindFadeTime))
 }
