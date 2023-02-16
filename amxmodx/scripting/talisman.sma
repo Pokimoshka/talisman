@@ -35,7 +35,7 @@ new bool:g_bTalisman = false;
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman", "1.4", "BiZaJe");
+	register_plugin("[RE] Talisman", "1.4.1", "BiZaJe");
 
 	register_dictionary("talisman.txt");
 	
@@ -117,7 +117,7 @@ public client_disconnected(iPlayer)
 		return;
 	}
 
-	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_DROPPED_OUT", g_iPlayerId);
+	client_print_color(0, g_iPlayerId, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_DROPPED_OUT", g_iPlayerId);
 
 	g_bTalisman = true;
 
@@ -142,7 +142,7 @@ public client_disconnected(iPlayer)
 
 	SetTouch(iEnt, "");
 	set_entvar(iEnt, var_flags, get_entvar(iEnt, var_flags) | FL_KILLME);
-	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_RAISED", g_iPlayerId = iPlayer);
+	client_print_color(0, iPlayer, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_RAISED", g_iPlayerId = iPlayer);
 	g_bTalisman = true;
 	ExecuteForward(g_eFwdTalisman[RISE_TALISMAN_POST], FwdReturn, iPlayer);
 }
@@ -208,7 +208,7 @@ public native_core_is_talisman()
 	set_entvar(iEnt, var_mins, Float:{-16.0,-16.0,-16.0})
 	set_entvar(iEnt, var_maxs, Float:{16.0,16.0,16.0})
 	set_entvar(iEnt, var_angles, fAngles);
-	client_print_color(0, print_team_default, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_LOST", g_iPlayerId);
+	client_print_color(0, iPlayer, "%L %L", 0, "TALISMAN_PREFIX", 0, "TALISMAN_LOST", g_iPlayerId);
 	ExecuteForward(g_eFwdTalisman[DROPPED_TALISMAN_POST], FwdReturn, iPlayer);
 	g_iPlayerId = 0
 	g_bTalisman = false;
