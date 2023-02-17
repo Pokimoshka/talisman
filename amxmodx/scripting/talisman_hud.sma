@@ -16,7 +16,7 @@ new g_SyncHud;
 
 public plugin_init()
 {
-    register_plugin("[RE] Talisman HUD", "1.0", "BiZaJe")
+    register_plugin("[RE] Talisman HUD", PLUGIN_VERSION, "BiZaJe")
 
     register_dictionary("talisman_hud.txt");
 
