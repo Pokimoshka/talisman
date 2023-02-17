@@ -17,7 +17,7 @@ new g_eCvars[CVARS];
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman Health", "1.0.1", "BiZaJe");
+	register_plugin("[RE] Talisman Health", PLUGIN_VERSION, "BiZaJe");
 
 	@RegisterCvars();
 }
@@ -123,5 +123,5 @@ public drop_talisman_post(iPlayer){
 
 stock bool:is_player_blinded(iPlayer)
 {
-    return bool:(get_gametime() >= Float:get_member(iPlayer, m_blindStartTime) + Float:get_member(iPlayer, m_blindFadeTime))
+    return bool:(Float:get_member(iPlayer, m_blindStartTime) + Float:get_member(iPlayer, m_blindFadeTime) >= get_gametime())
 }
