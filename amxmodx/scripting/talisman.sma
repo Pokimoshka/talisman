@@ -35,7 +35,7 @@ new bool:g_bTalisman = false;
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman", "1.4.1", "BiZaJe");
+	register_plugin("[RE] Talisman", PLUGIN_VERSION, "BiZaJe");
 
 	register_dictionary("talisman.txt");
 	
