@@ -9,7 +9,7 @@ new g_eCvars[CVARS];
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman Block Touch", "1.0", "BiZaJe");
+	register_plugin("[RE] Talisman Block Touch", PLUGIN_VERSION, "BiZaJe");
 
 	register_dictionary("talisman_touch.txt");
 
