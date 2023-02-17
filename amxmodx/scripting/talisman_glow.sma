@@ -16,7 +16,7 @@ new g_eCvars[CVARS];
 
 public plugin_init()
 {
-	register_plugin("[RE] Talisman Glow Player", "1.0", "BiZaJe");
+	register_plugin("[RE] Talisman Glow Player", PLUGIN_VERSION, "BiZaJe");
 
 	@RegisterCvars();
 }
