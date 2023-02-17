@@ -34,7 +34,7 @@ public plugin_precache(){
 
 public plugin_init()
 {
-    register_plugin("[RE] Talisman Sound", "1.0", "BiZaJe")
+    register_plugin("[RE] Talisman Sound", PLUGIN_VERSION, "BiZaJe")
 
 }
 
