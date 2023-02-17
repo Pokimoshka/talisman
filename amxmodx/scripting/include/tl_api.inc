@@ -1,6 +1,8 @@
 #include <amxmodx>
 #include <reapi>
 
+#define PLUGIN_VERSION "1.4.2"
+
 /**
     The function is called when the player has received a talisman
 */
