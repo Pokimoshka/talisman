@@ -23,13 +23,14 @@ enum _:FwdTalisman {
 enum CVARS
 {
 	MIN_PLAYERS,
-	ROUND_ACCESS
+	ROUND_ACCESS,
+	DROP_AFTER_DEATH_TALISMAN
 };
 
 new g_eFwdTalisman[FwdTalisman], g_eCvars[CVARS];
 new FwdReturn;
 
-new g_iPlayerId, g_MaxPlayers, g_iRoundCounter;
+new g_iPlayerId, g_iRoundCounter;
 new g_ModelIndex[32];
 new bool:g_bTalisman = false;
 
@@ -40,9 +41,8 @@ public plugin_init()
 	register_dictionary("talisman.txt");
 	
 	RegisterHookChain(RG_CSGameRules_RestartRound, "@HC_CSGameRules_RestartRound_Pre", .post = false);
+	RegisterHookChain(RG_CSGameRules_RestartRound, "@HC_CSGameRules_RestartRound_Post", .post = true);
 	RegisterHookChain(RG_CBasePlayer_Killed, "@HC_CBasePlayer_Killed_Post", .post = true);
-
-	g_MaxPlayers = get_maxplayers()
 
 	@RegisterFwdTalisman();
 	@RegisterCvars();
@@ -90,13 +90,16 @@ public client_disconnected(iPlayer)
 	}
 }
 
-@HC_CSGameRules_RestartRound_Pre()
-{
+@HC_CSGameRules_RestartRound_Pre(){
 	if(get_member_game(m_bCompleteReset)){
+		g_iPlayerId = 0;
 		g_iRoundCounter = 0;
 	}
 	g_iRoundCounter++;
+}
 
+@HC_CSGameRules_RestartRound_Post()
+{
 	if(g_iRoundCounter < g_eCvars[ROUND_ACCESS] || get_playersnum() < g_eCvars[MIN_PLAYERS] || g_iPlayerId){
 		return;
 	}
@@ -126,6 +129,12 @@ public client_disconnected(iPlayer)
 
 @HC_CBasePlayer_Killed_Post(const this, pevAttacker, iGib)
 {
+	if(g_eCvars[DROP_AFTER_DEATH_TALISMAN] <= 0){
+		g_iPlayerId = 0
+		g_bTalisman = false;
+		return;
+	}
+
 	if(this == g_iPlayerId)
 		@TalismanSpawn(g_iPlayerId);
 }
@@ -162,7 +171,14 @@ public client_disconnected(iPlayer)
 		"Minimum number of players to include"),
 		g_eCvars[MIN_PLAYERS]
 	);
-	
+	bind_pcvar_num(create_cvar(
+		"talisman_drop_after_death",
+		"1",
+		FCVAR_NONE,
+		"The talisman falls out after death"),
+		g_eCvars[DROP_AFTER_DEATH_TALISMAN]
+	);
+
 	AutoExecConfig(true, "talisman_core");
 }
 
@@ -224,7 +240,7 @@ stock AliveCount()
 {
 	new iAlive, iPlayer;
 	
-	for (iPlayer = 1; iPlayer <= g_MaxPlayers; iPlayer++)
+	for (iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 	{
 		if (is_user_alive(iPlayer) && ((get_member(iPlayer, m_iTeam) != TEAM_SPECTATOR) || (get_member(iPlayer, m_iTeam) != TEAM_UNASSIGNED)))
 			iAlive++;
@@ -237,7 +253,7 @@ stock RandomAlive(target_index)
 {
 	new iAlive, iPlayer;
 	
-	for (iPlayer = 1; iPlayer <= g_MaxPlayers; iPlayer++)
+	for (iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 	{
 		if (is_user_alive(iPlayer) && ((get_member(iPlayer, m_iTeam) != TEAM_SPECTATOR) || (get_member(iPlayer, m_iTeam) != TEAM_UNASSIGNED)))
 			iAlive++;
